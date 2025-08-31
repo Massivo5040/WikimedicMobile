@@ -2,9 +2,9 @@
 module.exports = {
   content: [
     "./App.tsx",
-    "./src/**/*.{js,ts,tsx}",
-    "./src/components/*.{js,ts,tsx}",
-    "./src/screens/**/*.{js,ts,tsx}",
+    "./app/**/*.{js,ts,tsx}",
+    "./app/components/*.{js,ts,tsx}",
+    "./app/screens/**/*.{js,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
   safelist: [
@@ -14,7 +14,12 @@ module.exports = {
     "text-[#D88DEE]",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["OpenSans_400Regular"],
+        sansBold: ["OpenSans_700Bold"],
+      },
+    },
   },
   plugins: [],
 };
