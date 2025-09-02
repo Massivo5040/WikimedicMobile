@@ -50,18 +50,12 @@ export default function App() {
         <SafeAreaView style={{ flex: 1 }}>
           <StatusBar style="auto" hidden={false} />
           <Stack.Navigator
-            initialRouteName="InitialRoute"
+            initialRouteName="Presentation"
             screenOptions={{ headerShown: false }}
           >
             <Stack.Screen name="Presentation" component={Presentation} />
-            {/* <Stack.Screen name="Presentation3" component={Presentation3} /> */}
-            {/* <Stack.Screen name="Welcome" component={Welcome} /> */}
             <Stack.Screen name="Login" component={Login} />
             <Stack.Screen name="Signin" component={Signin} />
-            {/* <Stack.Screen name="CorpLogin" component={CorpLogin} /> */}
-            {/* <Stack.Screen name="CorpSignin" component={CorpSignin} /> */}
-            {/* <Stack.Screen name="CorpWelcome" component={CorpWelcome} /> */}
-            {/* <Stack.Screen name="ClientWelcome" component={ClientWelcome} /> */}
             <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
             <Stack.Screen name="ForgotPassword2" component={ForgotPassword2} />
             <Stack.Screen name="ForgotPassword3" component={ForgotPassword3} />
