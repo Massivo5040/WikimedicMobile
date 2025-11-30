@@ -20,6 +20,7 @@ import {
   ForgotPassword3,
 } from "@/screens/presentation";
 import InitialRoute from "@/screens/InitialRoute";
+import { AuthProvider } from "@/contexts/UserContext";
 
 import "./global.css";
 import { useEffect } from "react";
@@ -47,21 +48,29 @@ export default function App() {
   return (
     <NavigationContainer>
       <SafeAreaProvider>
-        <SafeAreaView style={{ flex: 1 }}>
-          <StatusBar style="auto" hidden={false} />
-          <Stack.Navigator
-            initialRouteName="Presentation"
-            screenOptions={{ headerShown: false }}
-          >
-            <Stack.Screen name="Presentation" component={Presentation} />
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="Signin" component={Signin} />
-            <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-            <Stack.Screen name="ForgotPassword2" component={ForgotPassword2} />
-            <Stack.Screen name="ForgotPassword3" component={ForgotPassword3} />
-            <Stack.Screen name="InitialRoute" component={InitialRoute} />
-          </Stack.Navigator>
-        </SafeAreaView>
+        <AuthProvider>
+          <SafeAreaView style={{ flex: 1 }}>
+            <StatusBar style="auto" hidden={false} />
+            <Stack.Navigator
+              initialRouteName="Presentation"
+              screenOptions={{ headerShown: false }}
+            >
+              <Stack.Screen name="Presentation" component={Presentation} />
+              <Stack.Screen name="Login" component={Login} />
+              <Stack.Screen name="Signin" component={Signin} />
+              <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+              <Stack.Screen
+                name="ForgotPassword2"
+                component={ForgotPassword2}
+              />
+              <Stack.Screen
+                name="ForgotPassword3"
+                component={ForgotPassword3}
+              />
+              <Stack.Screen name="InitialRoute" component={InitialRoute} />
+            </Stack.Navigator>
+          </SafeAreaView>
+        </AuthProvider>
       </SafeAreaProvider>
     </NavigationContainer>
   );

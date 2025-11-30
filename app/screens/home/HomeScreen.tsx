@@ -14,6 +14,8 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { Text } from "@/components";
 
+import { useAuth } from "@/contexts/UserContext";
+
 // --- DADOS DE EXEMPLO (MOCK DATA) ---
 // Em um app real, isso viria de uma API.
 
@@ -147,6 +149,10 @@ const ProductCard = ({ item }: { item: (typeof productsData)[0] }) => (
 // --- TELA PRINCIPAL ---
 
 export default function HomeScreen() {
+  const { user } = useAuth();
+
+  console.log(user);
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView showsVerticalScrollIndicator={false}>

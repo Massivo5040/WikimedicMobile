@@ -13,6 +13,7 @@
     "@expo-google-fonts/open-sans": "^0.4.1",
     "@react-navigation/bottom-tabs": "^7.4.6",
     "@react-navigation/stack": "^7.4.7",
+    "axios": "^1.13.2",
     "expo": "~53.0.22",
     "expo-font": "~13.3.2",
     "expo-splash-screen": "~0.30.10",
@@ -23,7 +24,8 @@
     "react-native-pie-chart": "^4.0.1",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
-    "react-native-svg": "^15.12.1"
+    "react-native-svg": "^15.12.1",
+    "@react-native-async-storage/async-storage": "2.1.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
