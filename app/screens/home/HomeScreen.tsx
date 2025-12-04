@@ -35,7 +35,7 @@ interface MedicineResponse {
   medicines: Medicine[];
 }
 
-// --- DADOS ESTÁTICOS DE CATEGORIA (Mantido para o menu superior) ---
+// --- DADOS ESTÁTICOS DE CATEGORIA ---
 const categoriesData = [
   {
     id: "1",
@@ -88,18 +88,13 @@ const CategoryCard = ({ item }: { item: (typeof categoriesData)[number] }) => {
   );
 };
 
-// Componente adaptado para receber o objeto da API
 const ProductCard = ({ item }: { item: Medicine }) => {
-  // Lógica para imagem: Se vier da API, usa URI, senão usa imagem local
   const imageSource = item.image
     ? { uri: item.image }
     : require("assets/medicine.webp");
 
-  // Pega a primeira categoria ou define uma padrão
   const categoryName =
     item.categories.length > 0 ? item.categories[0] : "Geral";
-
-  // Define uma cor baseada na categoria (lógica simples para exemplo)
   const categoryColor = "bg-blue-500";
 
   return (
@@ -133,40 +128,34 @@ const ProductCard = ({ item }: { item: Medicine }) => {
 
 export default function HomeScreen() {
   const { user } = useAuth();
-
   const PAGE_SIZE = 10;
 
-  // Estados para gerenciar a lista de remédios
+  // Estados
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true); // Controle se ainda tem itens para carregar
+  const [hasMore, setHasMore] = useState(true);
 
-  // Configuração Axios
+  // 1. Novo Estado para a Busca
+  const [searchText, setSearchText] = useState("");
+
   const api = axios.create({
     baseURL: "https://wikimedic-api.onrender.com/",
     timeout: 10000,
   });
 
-  // Função para buscar remédios
   async function fetchMedicines(pageNumber: number) {
     if (isLoading) return;
 
     setIsLoading(true);
 
     try {
-      console.log(`Buscando página ${pageNumber}...`);
-
       const response = await api.get<MedicineResponse>(
         `medicines?page=${pageNumber}&pageSize=${PAGE_SIZE}&category=`
       );
 
       const newMedicines = response.data.medicines;
       const totalCount = response.data.count;
-
-      console.log(
-        `Recebidos: ${newMedicines.length} | Total no Banco: ${totalCount}`
-      );
 
       if (pageNumber === 1) {
         setMedicines(newMedicines);
@@ -179,9 +168,7 @@ export default function HomeScreen() {
           ? newMedicines.length
           : medicines.length + newMedicines.length;
 
-      // Se o total carregado for maior ou igual ao total do banco, não tem mais.
-      // OU se a quantidade que veio agora for 0, também paramos.
-      if (currentTotalLoaded >= totalCount || newMedicines.length === 0) {
+      if (totalCount < PAGE_SIZE) {
         setHasMore(false);
       } else {
         setHasMore(true);
@@ -201,11 +188,16 @@ export default function HomeScreen() {
   }, []);
 
   function handleLoadMore() {
-    // Só carrega se tiver mais, não estiver carregando e tiver itens na tela
     if (hasMore && !isLoading) {
       fetchMedicines(page + 1);
     }
   }
+
+  // 2. Lógica de Filtragem Local
+  // Filtra a lista 'medicines' baseada no 'searchText'
+  const filteredMedicines = medicines.filter((med) =>
+    med.commercial_name.toLowerCase().includes(searchText.toLowerCase())
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -229,7 +221,7 @@ export default function HomeScreen() {
 
           <Text className="text-gray-500 mb-2">Olá, {user?.name}</Text>
 
-          {/* Barra de Busca */}
+          {/* Barra de Busca Atualizada */}
           <View className="flex-row items-center bg-gray-100 rounded-full p-1 border border-gray-200">
             <View className="bg-blue-200 p-2 rounded-full">
               <Ionicons name="search" size={20} color="white" />
@@ -238,10 +230,22 @@ export default function HomeScreen() {
               placeholder="Buscar..."
               placeholderTextColor="gray"
               className="flex-1 ml-2 text-base"
+              // Vincula o valor e a função de atualizar o estado
+              value={searchText}
+              onChangeText={setSearchText}
             />
+            {/* Botão de limpar busca (X) só aparece se tiver texto */}
+            {searchText.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchText("")}
+                className="mr-2"
+              >
+                <Ionicons name="close-circle" size={20} color="gray" />
+              </TouchableOpacity>
+            )}
           </View>
 
-          {/* Seção de Categorias (Estática) */}
+          {/* Seção de Categorias */}
           <View className="my-6 items-center">
             <FlatList
               data={categoriesData}
@@ -262,9 +266,10 @@ export default function HomeScreen() {
             <Text className="text-gray-600 ml-2 font-semibold">Filtrar</Text>
           </TouchableOpacity>
 
-          {/* Grade de Produtos (Vinda da API) */}
+          {/* Grade de Produtos (Usando filteredMedicines) */}
           <FlatList
-            data={medicines}
+            // Alterado de 'medicines' para 'filteredMedicines'
+            data={filteredMedicines}
             renderItem={({ item }) => <ProductCard item={item} />}
             keyExtractor={(item) => item.id}
             numColumns={2}
@@ -273,13 +278,15 @@ export default function HomeScreen() {
             ListEmptyComponent={
               !isLoading ? (
                 <Text className="text-center text-gray-500 mt-4">
-                  Nenhum remédio encontrado.
+                  {searchText.length > 0
+                    ? `Nenhum remédio encontrado com "${searchText}".`
+                    : "Nenhum remédio encontrado."}
                 </Text>
               ) : null
             }
           />
 
-          {/* Loading Indicator e Botão Carregar Mais */}
+          {/* Loading e Carregar Mais */}
           <View className="my-6 items-center">
             {isLoading && (
               <ActivityIndicator
@@ -289,22 +296,25 @@ export default function HomeScreen() {
               />
             )}
 
-            {/* Mostra o botão se: NÃO está carregando E tem mais itens (hasMore) */}
-            {!isLoading && hasMore && medicines.length > 0 && (
-              <TouchableOpacity
-                onPress={handleLoadMore}
-                className="bg-gray-100 px-6 py-3 rounded-full border border-gray-300 active:bg-gray-200"
-              >
-                <Text className="text-gray-700 font-bold">
-                  Carregar mais remédios
-                </Text>
-              </TouchableOpacity>
-            )}
+            {/* Ocultei o botão "Carregar Mais" se estiver filtrando, para evitar confusão UX,
+                mas você pode remover a condição `searchText.length === 0` se preferir */}
+            {!isLoading &&
+              hasMore &&
+              filteredMedicines.length > 0 &&
+              searchText.length === 0 && (
+                <TouchableOpacity
+                  onPress={handleLoadMore}
+                  className="bg-gray-100 px-6 py-3 rounded-full border border-gray-300 active:bg-gray-200"
+                >
+                  <Text className="text-gray-700 font-bold">
+                    Carregar mais remédios
+                  </Text>
+                </TouchableOpacity>
+              )}
 
-            {/* Mensagem de fim da lista */}
             {!hasMore && medicines.length > 0 && !isLoading && (
               <Text className="text-gray-400 text-sm mt-2">
-                Você viu todos os {medicines.length} remédios.
+                Você viu todos os remédios carregados.
               </Text>
             )}
           </View>
