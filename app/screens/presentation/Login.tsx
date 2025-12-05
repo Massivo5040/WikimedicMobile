@@ -47,14 +47,11 @@ export default function LoginScreen() {
         email: email.trim(), // Remove espaços acidentais
         password: password,
       });
-      console.log(response);
 
       const successCodes = [200, 201];
 
       if (successCodes.includes(response.status)) {
         const { token, user } = response.data;
-
-        console.log("Login realizado:", user.email);
 
         // 4. Salva no Contexto (Storage)
         // Precisamos unir o token com os dados do usuário para salvar tudo junto
@@ -65,13 +62,8 @@ export default function LoginScreen() {
           email: user.email,
           phone: user.phone,
         });
-
-        // 5. Navega para a rota inicial logada
-        // Nota: Se suas rotas verificarem 'if (user)', a navegação pode ser automática.
-        // Caso contrário, forçamos a navegação:
-        navigation.navigate("InitialRoute");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
       if (error.response) {
         // Erros vindos da API (ex: 401 - Senha incorreta, 404 - Email não encontrado)

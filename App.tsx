@@ -2,7 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import { createStackNavigator } from "@react-navigation/stack";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useEffect } from "react";
 
 import {
   OpenSans_400Regular,
@@ -20,15 +20,51 @@ import {
   ForgotPassword3,
 } from "@/screens/presentation";
 import InitialRoute from "@/screens/InitialRoute";
-import { AuthProvider } from "@/contexts/UserContext";
+import { AuthProvider, FavoritesProvider, useAuth } from "@/contexts";
 
 import "./global.css";
-import { useEffect } from "react";
 
 const Stack = createStackNavigator();
 
 SplashScreen.preventAutoHideAsync();
 
+// --- 1. CRIAMOS UM COMPONENTE SEPARADO PARA AS ROTAS ---
+// Este componente será filho do AuthProvider, então o useAuth funcionará aqui
+function Routes() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    // Você pode retornar null ou um componente de Loading aqui
+    return null;
+  }
+
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <StatusBar style="auto" hidden={false} />
+      <Stack.Navigator
+        // Importante: Se o user existir, a rota inicial muda logicamente
+        screenOptions={{ headerShown: false }}
+      >
+        {user ? (
+          // --- USUÁRIO LOGADO ---
+          <Stack.Screen name="InitialRoute" component={InitialRoute} />
+        ) : (
+          // --- USUÁRIO NÃO LOGADO ---
+          <>
+            <Stack.Screen name="Presentation" component={Presentation} />
+            <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="Signin" component={Signin} />
+            <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+            <Stack.Screen name="ForgotPassword2" component={ForgotPassword2} />
+            <Stack.Screen name="ForgotPassword3" component={ForgotPassword3} />
+          </>
+        )}
+      </Stack.Navigator>
+    </SafeAreaView>
+  );
+}
+
+// --- 2. O APP PRINCIPAL APENAS CONFIGURA OS PROVIDERS ---
 export default function App() {
   const [loaded, error] = useFonts({
     OpenSans_400Regular,
@@ -48,29 +84,12 @@ export default function App() {
   return (
     <NavigationContainer>
       <SafeAreaProvider>
-        <AuthProvider>
-          <SafeAreaView style={{ flex: 1 }}>
-            <StatusBar style="auto" hidden={false} />
-            <Stack.Navigator
-              initialRouteName="Presentation"
-              screenOptions={{ headerShown: false }}
-            >
-              <Stack.Screen name="Presentation" component={Presentation} />
-              <Stack.Screen name="Login" component={Login} />
-              <Stack.Screen name="Signin" component={Signin} />
-              <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-              <Stack.Screen
-                name="ForgotPassword2"
-                component={ForgotPassword2}
-              />
-              <Stack.Screen
-                name="ForgotPassword3"
-                component={ForgotPassword3}
-              />
-              <Stack.Screen name="InitialRoute" component={InitialRoute} />
-            </Stack.Navigator>
-          </SafeAreaView>
-        </AuthProvider>
+        <FavoritesProvider>
+          {/* O AuthProvider envolve o componente Routes */}
+          <AuthProvider>
+            <Routes />
+          </AuthProvider>
+        </FavoritesProvider>
       </SafeAreaProvider>
     </NavigationContainer>
   );

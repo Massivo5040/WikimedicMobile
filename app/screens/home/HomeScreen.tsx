@@ -89,6 +89,8 @@ const CategoryCard = ({ item }: { item: (typeof categoriesData)[number] }) => {
 };
 
 const ProductCard = ({ item }: { item: Medicine }) => {
+  const navigation = useNavigation<NavigationProp<any>>();
+
   const imageSource = item.image
     ? { uri: item.image }
     : require("assets/medicine.webp");
@@ -98,7 +100,12 @@ const ProductCard = ({ item }: { item: Medicine }) => {
   const categoryColor = "bg-blue-500";
 
   return (
-    <TouchableOpacity className="flex-1 bg-white border border-gray-200 rounded-2xl m-2 overflow-hidden h-64">
+    <TouchableOpacity
+      onPress={() =>
+        navigation.navigate("MedicineDetails", { medicineId: item.id })
+      }
+      className="flex-1 bg-white border border-gray-200 rounded-2xl m-2 overflow-hidden h-64"
+    >
       <Image source={imageSource} className="w-full h-28" resizeMode="cover" />
       <View className="p-3 flex-1">
         <View className="flex-row items-center mb-1 flex-wrap">
@@ -255,16 +262,6 @@ export default function HomeScreen() {
               showsHorizontalScrollIndicator={false}
             />
           </View>
-
-          {/* Botão de Filtro */}
-          <TouchableOpacity className="flex-row self-start items-center bg-white border border-gray-300 rounded-full px-4 py-2 mb-4">
-            <MaterialCommunityIcons
-              name="filter-variant"
-              size={16}
-              color="gray"
-            />
-            <Text className="text-gray-600 ml-2 font-semibold">Filtrar</Text>
-          </TouchableOpacity>
 
           {/* Grade de Produtos (Usando filteredMedicines) */}
           <FlatList
