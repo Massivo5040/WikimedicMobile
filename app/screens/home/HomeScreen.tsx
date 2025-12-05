@@ -35,31 +35,43 @@ interface MedicineResponse {
   medicines: Medicine[];
 }
 
-// --- DADOS ESTÁTICOS DE CATEGORIA ---
+// --- NOVAS CATEGORIAS ---
 const categoriesData = [
   {
     id: "1",
-    name: "antibiótico",
-    color: "bg-blue-100 text-blue-800",
-    icon: "pill",
+    name: "Pediátricos",
+    color: "bg-cyan-100 text-cyan-800",
+    icon: "baby-carriage", // Ícone de bebê/criança
   },
   {
     id: "2",
-    name: "analgésico",
-    color: "bg-green-100 text-green-800",
-    icon: "medical-bag",
+    name: "Similares",
+    color: "bg-orange-100 text-orange-800",
+    icon: "content-copy", // Ícone de cópia/similar
   },
   {
     id: "3",
-    name: "homeopáticos",
-    color: "bg-red-100 text-red-800",
-    icon: "leaf",
+    name: "Fitoterápicos",
+    color: "bg-green-100 text-green-800",
+    icon: "leaf", // Ícone de planta
   },
   {
     id: "4",
-    name: "antiácido",
-    color: "bg-yellow-100 text-yellow-800",
-    icon: "stomach",
+    name: "Alopáticos",
+    color: "bg-red-100 text-red-800",
+    icon: "pill", // Ícone de pílula tradicional
+  },
+  {
+    id: "5",
+    name: "Genéricos",
+    color: "bg-purple-100 text-purple-800",
+    icon: "flask", // Ícone de laboratório/química
+  },
+  {
+    id: "6",
+    name: "Geral",
+    color: "bg-gray-100 text-gray-800",
+    icon: "format-list-bulleted", // Ícone de lista
   },
 ] as const;
 
@@ -77,7 +89,11 @@ const CategoryCard = ({ item }: { item: (typeof categoriesData)[number] }) => {
       className="items-center mr-4"
     >
       <View className="w-20 h-20 justify-center items-center bg-white border border-gray-200 rounded-2xl">
-        <MaterialCommunityIcons name={item.icon} size={32} color="#4A5568" />
+        <MaterialCommunityIcons
+          name={item.icon as any}
+          size={32}
+          color="#4A5568"
+        />
       </View>
       <Text
         className={`mt-2 px-2 py-1 text-xs font-bold rounded-md ${item.color}`}

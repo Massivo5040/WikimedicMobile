@@ -26,7 +26,7 @@ interface Medicine {
   commercial_name: string;
   description: string;
   registry_code: string;
-  categories: string[];
+  categories: string[]; // Array de strings com as categorias
   image: string | null;
 }
 
@@ -45,57 +45,67 @@ type CategoryScreenRouteProp = RouteProp<RootStackParamList, "CategoryScreen">;
 
 // --- CONFIGURAÇÃO DE CORES E TEXTOS ---
 
-// 1. Mapa de Cores (Fundo Claro + Texto Escuro)
 const categoryStyles: Record<string, string> = {
-  antibiótico: "bg-blue-100 text-blue-800",
-  analgésico: "bg-green-100 text-green-800",
-  homeopáticos: "bg-red-100 text-red-800",
-  antiácido: "bg-yellow-100 text-yellow-800",
+  pediátricos: "bg-cyan-100 text-cyan-800",
+  similares: "bg-orange-100 text-orange-800",
+  fitoterápicos: "bg-green-100 text-green-800",
+  alopáticos: "bg-red-100 text-red-800",
+  genéricos: "bg-purple-100 text-purple-800",
+  geral: "bg-gray-100 text-gray-800",
   default: "bg-gray-100 text-gray-800",
 };
 
-// 2. Mapa de Cores Sólidas (Para as tags dos cards - Fundo Escuro)
 const categorySolidStyles: Record<string, string> = {
-  antibiótico: "bg-blue-500",
-  analgésico: "bg-green-500",
-  homeopáticos: "bg-red-500",
-  antiácido: "bg-yellow-500",
+  pediátricos: "bg-cyan-600",
+  similares: "bg-orange-500",
+  fitoterápicos: "bg-green-600",
+  alopáticos: "bg-red-600",
+  genéricos: "bg-purple-600",
+  geral: "bg-gray-500",
   default: "bg-gray-500",
 };
 
-// 3. Mapa de Descrições
 const categoryDescriptions: Record<string, string> = {
-  antibiótico:
-    "Medicamentos usados para tratar infecções causadas por bactérias, impedindo seu crescimento ou destruindo-as.",
-  analgésico:
-    "Medicamentos indicados para o alívio de dores de diversas intensidades e redução da febre.",
-  homeopáticos:
-    "Terapias baseadas no princípio de que 'o semelhante cura o semelhante', usando substâncias diluídas.",
-  antiácido:
-    "Medicamentos que neutralizam a acidez do estômago, aliviando sintomas de azia e má digestão.",
+  pediátricos:
+    "Medicamentos desenvolvidos especialmente para bebês e crianças, com dosagens adequadas.",
+  similares:
+    "Medicamentos com o mesmo princípio ativo e indicação do referência, mas com marca própria.",
+  fitoterápicos:
+    "Medicamentos obtidos de plantas medicinais e seus derivados, com eficácia comprovada.",
+  alopáticos:
+    "Medicamentos tradicionais que produzem efeitos contrários aos sintomas da doença.",
+  genéricos:
+    "Medicamentos com o mesmo princípio ativo do referência, mas geralmente mais acessíveis.",
+  geral: "Lista completa de todos os medicamentos disponíveis no catálogo.",
   default: "Lista de medicamentos disponíveis nesta categoria.",
 };
 
-// Função auxiliar para pegar a cor segura
 const getCategoryStyle = (name: string, type: "light" | "solid") => {
-  const key = name.toLowerCase();
+  const key = name ? name.toLowerCase() : "default";
   const map = type === "light" ? categoryStyles : categorySolidStyles;
   return map[key] || map["default"];
 };
 
 // --- COMPONENTE DO CARD ---
 const ProductCard = ({ item }: { item: Medicine }) => {
+  const navigation = useNavigation<NavigationProp<any>>();
   const imageSource = item.image
     ? { uri: item.image }
     : require("assets/medicine.webp");
 
   const categoryName =
     item.categories.length > 0 ? item.categories[0] : "Geral";
-  // Pega a cor baseada na categoria do item
+
+  // Usa a primeira categoria do remédio para definir a cor da etiqueta
   const badgeColor = getCategoryStyle(categoryName, "solid");
 
   return (
-    <TouchableOpacity className="flex-1 bg-white border border-gray-200 rounded-2xl m-2 overflow-hidden shadow-sm h-64">
+    <TouchableOpacity
+      onPress={() =>
+        navigation.navigate("MedicineDetails", { medicineId: item.id })
+      }
+      className="flex-1 bg-white border border-gray-200 rounded-2xl m-2 overflow-hidden shadow-sm h-64"
+    >
       <Image source={imageSource} className="w-full h-28" resizeMode="cover" />
       <View className="p-3 flex-1">
         <View className="flex-row items-center mb-1 flex-wrap">
@@ -107,7 +117,6 @@ const ProductCard = ({ item }: { item: Medicine }) => {
           </Text>
         </View>
         <View className="self-start mb-2">
-          {/* Aplica a cor dinâmica aqui */}
           <Text
             className={`text-xs text-white font-semibold px-2 py-0.5 rounded-full ${badgeColor}`}
           >
@@ -133,10 +142,11 @@ export default function CategoryScreen() {
   const descriptionText =
     categoryDescriptions[formattedCategory] || categoryDescriptions["default"];
 
-  // Pega o estilo (bg-cor e text-cor) baseado na categoria atual
   const headerStyle = getCategoryStyle(formattedCategory, "light");
 
-  const PAGE_SIZE = 10;
+  // Aumentei o pageSize para garantir que, ao filtrar localmente, tenhamos chance de achar itens
+  const PAGE_SIZE = 50;
+
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -153,27 +163,46 @@ export default function CategoryScreen() {
     setIsLoading(true);
 
     try {
-      console.log(`Buscando ${categoryName} - Página ${pageNumber}...`);
-
-      const response = await api.get<MedicineResponse>(
-        `medicines?page=${pageNumber}&pageSize=${PAGE_SIZE}&category=`
+      console.log(
+        `Buscando página ${pageNumber} (Filtro Local: ${categoryName})...`
       );
 
-      const newMedicines = response.data.medicines;
-      const totalCount = response.data.count;
+      // 1. Busca TUDO da API (sem filtro na URL)
+      const response = await api.get<MedicineResponse>(
+        `medicines?page=${pageNumber}&pageSize=${PAGE_SIZE}`
+      );
 
-      if (pageNumber === 1) {
-        setMedicines(newMedicines);
+      const fetchedMedicines = response.data.medicines;
+      const totalCount = response.data.count; // Total no banco (sem filtro)
+
+      // 2. Filtragem Local (Client-Side)
+      let filteredNewMedicines: Medicine[] = [];
+
+      if (categoryName === "Geral") {
+        // Se for Geral, mostra tudo
+        filteredNewMedicines = fetchedMedicines;
       } else {
-        setMedicines((prev) => [...prev, ...newMedicines]);
+        // Filtra verificando se o array de categorias do remédio contem a categoria selecionada
+        filteredNewMedicines = fetchedMedicines.filter((med) =>
+          med.categories.some((cat) => cat.toLowerCase() === formattedCategory)
+        );
       }
 
-      const currentTotalLoaded =
-        pageNumber === 1
-          ? newMedicines.length
-          : medicines.length + newMedicines.length;
+      console.log(
+        `Itens recebidos: ${fetchedMedicines.length} | Itens após filtro: ${filteredNewMedicines.length}`
+      );
 
-      if (currentTotalLoaded >= totalCount || newMedicines.length === 0) {
+      // 3. Atualiza o Estado
+      if (pageNumber === 1) {
+        setMedicines(filteredNewMedicines);
+      } else {
+        setMedicines((prev) => [...prev, ...filteredNewMedicines]);
+      }
+
+      // 4. Lógica do "Carregar Mais"
+      // Se a API retornou menos itens do que o pageSize, significa que acabou o banco de dados.
+      // Usamos fetchedMedicines.length para saber se a API esgotou, e não o filtrado.
+      if (fetchedMedicines.length < PAGE_SIZE) {
         setHasMore(false);
       } else {
         setHasMore(true);
@@ -188,7 +217,11 @@ export default function CategoryScreen() {
     }
   }
 
+  // Reseta a lista e busca do zero quando a categoria muda
   useEffect(() => {
+    setMedicines([]);
+    setPage(1);
+    setHasMore(true);
     fetchMedicines(1);
   }, [categoryName]);
 
@@ -232,7 +265,6 @@ export default function CategoryScreen() {
           <Ionicons name="arrow-back" size={20} color="#4A5568" />
         </TouchableOpacity>
 
-        {/* AQUI ESTÁ A MUDANÇA: headerStyle aplicado dinamicamente */}
         <Text
           className={`${headerStyle} text-sm font-bold px-4 py-1 rounded-full mb-3 capitalize`}
         >
@@ -252,18 +284,22 @@ export default function CategoryScreen() {
         <ActivityIndicator size="large" color="#0D1B2A" className="mb-4" />
       )}
 
-      {!isLoading && hasMore && medicines.length > 0 && (
+      {!isLoading && hasMore && (
         <TouchableOpacity
           onPress={handleLoadMore}
-          className="bg-gray-100 px-6 py-3 rounded-full border border-gray-300 w-full items-center"
+          className="bg-gray-100 px-6 py-3 rounded-full border border-gray-300 w-full items-center active:bg-gray-200"
         >
-          <Text className="text-gray-700 font-bold">Carregar mais</Text>
+          <Text className="text-gray-700 font-bold">
+            {medicines.length === 0 ? "Buscar remédios" : "Carregar mais"}
+          </Text>
         </TouchableOpacity>
       )}
 
-      {!hasMore && medicines.length > 0 && !isLoading && (
+      {!hasMore && !isLoading && (
         <Text className="text-gray-400 text-sm mt-2">
-          Fim da lista de {categoryName}.
+          {medicines.length > 0
+            ? `Fim da lista de ${categoryName}.`
+            : "Nenhum remédio encontrado nesta categoria."}
         </Text>
       )}
     </View>
@@ -282,7 +318,7 @@ export default function CategoryScreen() {
         ListEmptyComponent={
           !isLoading ? (
             <Text className="text-center text-gray-500 mt-10">
-              Nenhum medicamento encontrado.
+              Nenhum medicamento encontrado. Tente carregar mais.
             </Text>
           ) : null
         }
